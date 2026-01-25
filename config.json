@@ -1,0 +1,16 @@
+{
+    "spi.sck": 2,
+    "spi.mosi": 3,
+    "spi.miso": 4,
+    "spi.baudrate": 100000,
+    "display.cs": 5,
+    "display.dc": 6,
+    "display.rst": 7,
+    "display.lit": 21,
+    "display.brightness": 50,
+    "display.inactivity_timeout": 30,
+    "mcp41x1.cs" : 20,
+    "button.gpio" : 9,
+    "http.server.host": "0.0.0.0",
+    "http.server.port": 80
+}
