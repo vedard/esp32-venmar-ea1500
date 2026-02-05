@@ -1,8 +1,8 @@
 {
-    "spi.sck": 2,
-    "spi.mosi": 3,
-    "spi.miso": 4,
-    "spi.baudrate": 100000,
+    "spi.sck": 8,
+    "spi.mosi": 10,
+    "spi.miso": 9,
+    "spi.baudrate": 10000000,
     "display.cs": 5,
     "display.dc": 6,
     "display.rst": 7,
@@ -10,7 +10,7 @@
     "display.brightness": 50,
     "display.inactivity_timeout": 30,
     "mcp41x1.cs" : 20,
-    "button.gpio" : 9,
+    "button.gpio" : 4,
     "http.server.host": "0.0.0.0",
     "http.server.port": 80
 }
