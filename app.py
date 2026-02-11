@@ -1,13 +1,13 @@
-import micropython
 import http
 
 from lib.microdot import Microdot
-from machine import Pin, SoftSPI
+from machine import Pin, SPI
 from MCP41X1 import MCP41X1
 from EA1500 import EA1500
 from storage import Storage
 from wifi import WiFi
 from display import Display
+from button import Button
 
 
 class App:
@@ -29,8 +29,9 @@ class App:
             self.storage.get_secret("wifi.password"),
         )
 
-        self.spi = SoftSPI(
-            baudrate=3200000,
+        self.spi = SPI(
+            1,
+            baudrate=self.storage.get_option("spi.baudrate"),
             sck=Pin(self.storage.get_option("spi.sck")),
             miso=Pin(self.storage.get_option("spi.miso")),
             mosi=Pin(self.storage.get_option("spi.mosi")),
@@ -43,11 +44,7 @@ class App:
         )
         self.ea1500.configure_presets(self.storage.get_persistent_value("ea1500.presets"))
 
-        self.button = Pin(self.storage.get_option("button.gpio"), Pin.IN, Pin.PULL_UP)
-        self.button.irq(
-            trigger=Pin.IRQ_RISING,
-            handler=lambda _: micropython.schedule(self.__on_button_click, None),
-        )
+        self.button = Button(Pin(self.storage.get_option("button.gpio")), self.__on_button_click)
 
         self.display = Display(
             self.spi,
@@ -66,9 +63,7 @@ class App:
         http.register_routes(self)
 
     def run(self):
-        self.ea1500.apply_preset(
-            self.storage.get_persistent_value("current_preset")
-        )
+        self.ea1500.apply_preset(self.storage.get_persistent_value("current_preset"))
         self.display.draw()
         self.display.wake()
 
@@ -96,7 +91,7 @@ class App:
         tft.rect((2, 27), (158, 78), tft.PURPLE)
         tft.text((7, 32), f"{self.ea1500.state["name"]}", tft.WHITE, font, 2, nowrap=False)
         tft.text((7, 50), f"{self.ea1500.state["value"]}", tft.WHITE, font, 1, nowrap=False)
-        
+
         ip = self.wifi.get_ip()
         if ip != "0.0.0.0":
             tft.text((7, 93), f"IP: {ip}", tft.WHITE, font, 1, nowrap=False)

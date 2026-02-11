@@ -34,7 +34,7 @@ class WiFi:
             return True
         
         else:
-            print("Failed to connect to Wi-Fi after 5 attempts.")
+            print(f"Failed to connect to Wi-Fi after {retries} attempts.")
             return False
     
     def get_ip(self):
