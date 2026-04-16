@@ -1,3 +1,4 @@
 from app import App
+import asyncio
 
-App().run()
+asyncio.run(App().run())

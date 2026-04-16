@@ -6,19 +6,15 @@ class EA1500:
     Venmar EA1500 air exchanger controller using MCP41X1 digital potentiometer
     """
 
-
     def __init__(self, mcp41x1):
         self.mcp41x1: MCP41X1 = mcp41x1
-
-    def configure_presets(self, presets):
-        self.presets = presets
-
-    def get_preset_by_name(self, name:str):
-        for preset in self.presets:
-            if name.lower() == preset["name"].lower():
-                return preset
-        else:
-            raise ValueError(f"Could not find preset '{name}'")
+        self.presets = [
+            {"name": "Off", "value": 128},
+            {"name": "Normal", "value": 64},
+            {"name": "Boost", "value": 32},
+            {"name": "Recirculation", "value": 16},
+        ]
+        self.state = self.presets[0]
 
     def apply_preset(self, name):
         """
@@ -33,7 +29,6 @@ class EA1500:
         else:
             raise ValueError(f"Could not find preset '{name}'")
         
-
     def cycle_preset(self):
         """
         Cycle to the next preset in the order: OFF, Normal, Boost, Recirculation
