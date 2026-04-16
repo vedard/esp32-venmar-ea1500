@@ -2,7 +2,7 @@
 
 ## Description
 
-A MicroPython controller that emulates the Venmar C34 remote control to manage and automate a Venmar EA1500 air exchanger via an HTTP API.
+A MicroPython controller that emulates the Venmar C34 remote control to manage and automate a Venmar EA1500 air exchanger via MQTT or HTTP.
 
 ## Hardware
 
@@ -12,11 +12,11 @@ A MicroPython controller that emulates the Venmar C34 remote control to manage a
 
 ## How It Works
 
-The EA1500 air exchanger supports four operating modes: Off, Normal, Boost, Recirculation
+The EA1500 air exchanger supports four operating presets: Off, Normal, Boost, and Recirculation.
 
 On the original C34 remote, there is a switch that mechanically changes which resistor is connected between the black and green wires. To reproduce this behavior, a digital potentiometer can be used to replicate the same resistances expected by the air exchanger.
 
-| Mode          | Resistance |
+| Preset        | Resistance |
 | ------------- | ---------- |
 | Off           | ~42kΩ      |
 | Normal        | ~21kΩ      |
@@ -25,57 +25,10 @@ On the original C34 remote, there is a switch that mechanically changes which re
 
 The remote control also uses a red and a yellow wire, but the unit works perfectly without connecting these two other wires.
 
-## Home assistant
+## Home Assistant
 
 The goal of the project is to be able to remotely control and automate the air exchanger via Home Assistant.
 
-For example, it is useful to ventilate in Normal or Boost mode (e.g., while cooking), but during winter this brings in cold air and in summer hot, humid air. With Home Assistant, you can monitor outdoor conditions and automatically switch the air exchanger back to Recirculation.
+For example, it is useful to ventilate with the Normal or Boost preset (e.g., while cooking), but during winter this brings in cold air and in summer hot, humid air. With Home Assistant, you can monitor outdoor conditions and automatically switch the air exchanger back to Recirculation.
 
-A [REST Sensor](https://www.home-assistant.io/integrations/rest/) can be used to retrieve the operating mode of the air exchanger.
-
-```yml
-rest:
-  - resource: http://[REPLACE_ESP32_IP]/
-    scan_interval: 10
-    sensor:
-      - name: Air Exchanger State
-        value_template: "{{ value_json.state }}"
-```
-
-A [REST command](https://www.home-assistant.io/integrations/rest_command/) allows Home Assistant to change the air exchanger mode.
-
-```yml
-rest_command:
-  set_air_exchanger:
-    url: http://[REPLACE_ESP32_IP]/
-    method: POST
-    headers:
-      Content-Type: application/json
-      Authorization: "Bearer [REPLACE AUTH TOKEN]"
-    payload: '{ "state": "{{ state }}" }'
-```
-
-Finally, the [template select entity](https://www.home-assistant.io/integrations/template/#select) provides a control that can be used from a Home Assistant dashboard.
-
-```yml
-template:
-  - select:
-      - name: Air Exchanger
-        options: >
-          {{ ['Off', 'Normal', 'Boost', 'Recirculation'] }}
-        state: "{{ states('sensor.air_exchanger_state') }}"
-        select_option:
-          - service: rest_command.set_air_exchanger
-            data:
-              state: "{{ option }}"
-        icon: >
-          {% if states('sensor.air_exchanger_state') == 'Normal' %}
-            mdi:fan
-          {% elif states('sensor.air_exchanger_state') == 'Boost' %}
-            mdi:fan-plus
-          {% elif states('sensor.air_exchanger_state') == 'Recirculation' %}
-            mdi:recycle
-          {% else %}
-            mdi:fan-off
-          {% endif %}
-```
+Communication is handled through the Home Assistant [MQTT integration](https://www.home-assistant.io/integrations/mqtt/). The ESP32 publishes discovery data to `homeassistant/device/[DEVICE_ID]/config`, publishes state to `homeassistant/device/[DEVICE_ID]/state`, and listens for commands on `homeassistant/device/[DEVICE_ID]/command/+`.

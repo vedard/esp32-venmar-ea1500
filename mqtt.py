@@ -6,11 +6,12 @@ from lib.umqtt import MQTTClient, MQTTException
 class MQTT:
     DEFAULT_PORT = 1883
 
-    def __init__(self, host, username, password, callback):
+    def __init__(self, host, username, password):
         server, port = self._split_server_port(host)
 
         self.connected = False
-        self.subscriptions = set()
+        self._connect_callbacks = []
+        self._message_callbacks = []
         self.client_id = machine.unique_id().hex()
         self.mqtt = MQTTClient(
             self.client_id,
@@ -19,7 +20,6 @@ class MQTT:
             username,
             password,
         )
-        self._callback = callback
         self.mqtt.set_callback(self._message_received)
 
     def connect(self):
@@ -28,8 +28,8 @@ class MQTT:
             self.connected = False
             self.mqtt.connect()
             self.connected = True
-            for topic in self.subscriptions:
-                self.mqtt.subscribe(topic)
+            for callback in self._connect_callbacks:
+                callback()
             print("MQTT connected")
         except OSError as e:
             print("MQTT error:", e)
@@ -48,8 +48,6 @@ class MQTT:
             self.connected = False
 
     def subscribe(self, topic):
-        self.subscriptions.add(topic)
-
         if not self.connected:
             return
         
@@ -58,6 +56,12 @@ class MQTT:
         except OSError as e:        
             print("MQTT error:", e)
             self.connected = False
+
+    def add_connect_callback(self, callback):
+        self._connect_callbacks.append(callback)
+
+    def add_message_callback(self, callback):
+        self._message_callbacks.append(callback)
 
     async def listen_loop(self):
         while True:
@@ -89,4 +93,5 @@ class MQTT:
         topic = topic.decode()
         msg = msg.decode()
         print(f"MQTT incoming {topic} - {msg}")
-        self._callback(topic, msg)
+        for callback in self._message_callbacks:
+            callback(topic, msg)
