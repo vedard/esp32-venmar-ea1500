@@ -1,4 +1,5 @@
 from MCP41X1 import MCP41X1 
+import logging
 
 
 class EA1500:
@@ -7,6 +8,7 @@ class EA1500:
     """
 
     def __init__(self, mcp41x1):
+        self.logger = logging.getLogger("EA1500")
         self.mcp41x1: MCP41X1 = mcp41x1
         self.presets = [
             {"name": "Off", "value": 128},
@@ -22,7 +24,7 @@ class EA1500:
         """
         for preset in self.presets:
             if name.lower() == preset["name"].lower():
-                print(f"Applying preset '{preset["name"]}' to EA1500")
+                self.logger.info(f"Applying preset '{preset['name']}'")
                 if self.mcp41x1.wiper_write(preset["value"]):
                     self.state = preset
                     return

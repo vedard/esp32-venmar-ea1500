@@ -1,4 +1,5 @@
 import json
+import logging
 
 
 def merge(dict1, dict2):
@@ -19,6 +20,7 @@ class Storage:
     STATE_FILE = "data.json"
 
     def __init__(self, default_state):
+        self.logger = logging.getLogger("Storage")
         self._options = {}
         self._secrets = {}
         self._state = default_state
@@ -28,15 +30,15 @@ class Storage:
         self._load(self.STATE_FILE, self._state)
 
     def _load(self, filename, target):
-        print(f"Loading {filename}")
+        self.logger.info(f"Loading {filename}")
         try:
             with open(filename, "r") as f:
                 merge(target, json.load(f))
-        except:
-            print(f"Could not open {filename}")
+        except Exception as e:
+            self.logger.exception(f"Could not open {filename}", e)
 
     def _save_state(self):
-        print(f"Saving {self.STATE_FILE}")
+        self.logger.info(f"Saving {self.STATE_FILE}")
         with open(self.STATE_FILE, "w") as f:
             json.dump(self._state, f)
 

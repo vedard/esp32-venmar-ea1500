@@ -1,3 +1,6 @@
+import logging
+
+
 class MCP41X1:
     """
     Microchip MCP41X1 – Digital Potentiometer (SPI)
@@ -11,6 +14,7 @@ class MCP41X1:
     DECREMENT_COMMAND = 0b10
 
     def __init__(self, spi, cs):
+        self.logger = logging.getLogger("MCP41X1")
         self.spi = spi
         self.cs = cs
         
@@ -29,8 +33,8 @@ class MCP41X1:
                 value & 0xff
             ]))
             return True
-        except Exception:
-            print("Could not send command to MCP41X1")
+        except Exception as e:
+            self.logger.exception("Could not send command", e)
             return False
         finally:
             self.cs.on()
@@ -48,8 +52,8 @@ class MCP41X1:
                 self.WIPER_ADDRESS << 4 | command << 2 | (value & 0b11)
             ]))
             return True
-        except Exception:
-            print("Could not send command to MCP41X1")
+        except Exception as e:
+            self.logger.exception("Could not send command", e)
             return False
         finally:
             self.cs.on()
@@ -63,7 +67,7 @@ class MCP41X1:
         if not 0 <= value < 256:
             raise ValueError("Wiper value must be 0–255")
         
-        print(f"Setting MCP41X1 wiper to '{value}'")
+        self.logger.info(f"Setting wiper to '{value}'")
         return self.__send_16bit_command(self.WRITE_COMMAND, value)
 
     def wiper_increment(self):

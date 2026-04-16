@@ -12,5 +12,6 @@
     "mcp41x1.cs" : 20,
     "button.gpio" : 9,
     "http.server.host": "0.0.0.0",
-    "http.server.port": 80
+    "http.server.port": 80,
+    "ntp.host": "pool.ntp.org"
 }

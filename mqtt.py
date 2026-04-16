@@ -1,7 +1,9 @@
 import machine
 import asyncio
+import logging
 
 from lib.umqtt import MQTTClient, MQTTException
+
 
 class MQTT:
     DEFAULT_PORT = 1883
@@ -9,6 +11,7 @@ class MQTT:
     def __init__(self, host, username, password):
         server, port = self._split_server_port(host)
 
+        self.logger = logging.getLogger("MQTT")
         self.connected = False
         self._connect_callbacks = []
         self._message_callbacks = []
@@ -24,27 +27,27 @@ class MQTT:
 
     def connect(self):
         try:
-            print("MQTT connecting...")
             self.connected = False
+            self.logger.info("Connecting")
             self.mqtt.connect()
+            self.logger.info("Connected")
             self.connected = True
             for callback in self._connect_callbacks:
                 callback()
-            print("MQTT connected")
         except OSError as e:
-            print("MQTT error:", e)
+            self.logger.exception("Connection failed", e)
         except MQTTException as e:
-            print("MQTT error:", e)
+            self.logger.exception("Connection failed", e)
     
     def publish(self, topic, message):
         if not self.connected:
             return
 
         try:
-            print(f"MQTT publish {topic}")
+            self.logger.info(f"Publishing {topic}")
             self.mqtt.publish(topic, message)
-        except OSError as e:        
-            print("MQTT error:", e)
+        except OSError as e:
+            self.logger.exception("Publish failed", e)
             self.connected = False
 
     def subscribe(self, topic):
@@ -52,9 +55,10 @@ class MQTT:
             return
         
         try:
+            self.logger.info(f"Subscribing {topic}")
             self.mqtt.subscribe(topic)
-        except OSError as e:        
-            print("MQTT error:", e)
+        except OSError as e:
+            self.logger.exception("Subscribe failed", e)
             self.connected = False
 
     def add_connect_callback(self, callback):
@@ -69,7 +73,7 @@ class MQTT:
                 try:
                     self.mqtt.check_msg()
                 except OSError as e:
-                    print("MQTT error:", e)
+                    self.logger.exception("Listen failed", e)
                     self.connected = False
             
             await asyncio.sleep(1)
@@ -92,6 +96,6 @@ class MQTT:
     def _message_received(self, topic, msg):
         topic = topic.decode()
         msg = msg.decode()
-        print(f"MQTT incoming {topic} - {msg}")
+        self.logger.info(f"Incoming {topic} - {msg}")
         for callback in self._message_callbacks:
             callback(topic, msg)

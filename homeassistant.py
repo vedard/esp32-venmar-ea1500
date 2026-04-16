@@ -1,8 +1,10 @@
 import json
+import logging
 
 
 class HomeAssistant:
     def __init__(self, mqtt, name, model, manufacturer, origin, components):
+        self.logger = logging.getLogger("HomeAssistant")
         self.mqtt = mqtt
         self.topic_prefix = f"homeassistant/device/{mqtt.client_id}/"
         self.components = components
@@ -24,21 +26,25 @@ class HomeAssistant:
 
 
     def publish_state(self, state):
+        self.logger.info("Publishing state")
         self.mqtt.publish(self.topic_prefix + "state", json.dumps(state))
 
     def _on_mqtt_connect(self):
+        self.logger.info("Publishing discovery config")
         self.mqtt.subscribe(self.topic_prefix + "command/+")
         self.mqtt.publish(self.topic_prefix + "config", json.dumps(self._config))
 
     def _message_received(self, topic, message):
         for component in self.components:
             if component.handle_message(self, topic, message):
+                self.logger.info(f"Handled command on {topic}")
                 return
 
 class Component:
     platform = None
 
     def __init__(self, name, icon):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.name = name
         self.component_id = name.lower().replace(" ", "")
         self.icon = icon
@@ -82,7 +88,9 @@ class Select(Component):
             return False
 
         if message not in self.options:
-            print(f"Home Assistant ignored invalid {self.component_id}: {message}")
+            self.logger.warning(
+                f"Ignored invalid {self.component_id}: {message}",
+            )
             return True
 
         self.on_command(message)

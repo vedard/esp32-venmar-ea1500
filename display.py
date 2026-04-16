@@ -1,10 +1,12 @@
 from lib.ST7735 import TFT
 from machine import Pin, PWM, Timer
 from font import font
+import logging
 
 
 class Display:
     def __init__(self, spi, cs, dc, rst, lit):
+        self.logger = logging.getLogger("Display")
         self.tft = TFT(spi, dc, rst, cs)
         self.tft.rotation(1)
         self.tft.initr()

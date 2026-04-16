@@ -1,5 +1,6 @@
 import http
 import asyncio
+import logging
 
 from lib.microdot import Microdot
 from machine import Pin, SPI
@@ -11,25 +12,31 @@ from display import Display
 from button import Button
 from mqtt import MQTT
 from homeassistant import HomeAssistant, Select
+from ntp import NTP
 
 
 class App:
     def __init__(self):
-        self.storage = Storage(
-            {
-                "current_preset": "Off",
-            }
-        )
+        self.logger = logging.getLogger("App")
+        self.logger.info("Starting application")
+
+        self.storage = Storage({
+            "current_preset": "Off"
+        })
 
         self.wifi = WiFi(
             self.storage.get_secret("wifi.ssid"),
             self.storage.get_secret("wifi.password"),
         )
 
+        self.network_time = NTP(
+            self.storage.get_option("ntp.host"),
+        )
+
         self.mqtt = MQTT(
             self.storage.get_secret("mqtt.host"),
             self.storage.get_secret("mqtt.username"),
-            self.storage.get_secret("mqtt.password")
+            self.storage.get_secret("mqtt.password"),
         )
 
         self.spi = SPI(
@@ -42,8 +49,9 @@ class App:
 
         self.ea1500 = EA1500(
             MCP41X1(
-                self.spi, Pin(self.storage.get_option("mcp41x1.cs"), Pin.OUT, value=1)
-            )
+                self.spi,
+                Pin(self.storage.get_option("mcp41x1.cs"), Pin.OUT, value=1),
+            ),
         )
 
         self.button = Button(Pin(self.storage.get_option("button.gpio")), self.__on_button_click)
@@ -86,6 +94,7 @@ class App:
         self.display.wake()
 
         self.wifi.connect()
+        self.network_time.sync()
         self.display.draw()
         self.display.wake()
         
@@ -112,6 +121,7 @@ class App:
         })
         
     def __on_button_click(self, _):
+        self.logger.info("Button clicked")
         if self.display.is_awake():
             preset = self.ea1500.cycle_preset()
             self.storage.save_persistent_value("current_preset", preset["name"])
@@ -125,8 +135,8 @@ class App:
         tft.fill(tft.BLACK)
         tft.rect((1, 26), (160, 80), tft.PURPLE)
         tft.rect((2, 27), (158, 78), tft.PURPLE)
-        tft.text((7, 32), f"{self.ea1500.state["name"]}", tft.WHITE, font, 2, nowrap=False)
-        tft.text((7, 50), f"{self.ea1500.state["value"]}", tft.WHITE, font, 1, nowrap=False)
+        tft.text((7, 32), f"{self.ea1500.state['name']}", tft.WHITE, font, 2, nowrap=False)
+        tft.text((7, 50), f"{self.ea1500.state['value']}", tft.WHITE, font, 1, nowrap=False)
 
         ip = self.wifi.get_ip()
         if ip != "0.0.0.0":
@@ -135,6 +145,7 @@ class App:
             tft.text((7, 93), f"connecting...", tft.WHITE, font, 1, nowrap=False)
 
     def __on_preset_command(self, preset):
+        self.logger.info(f"Preset command received: {preset}")
         self.ea1500.apply_preset(preset)
         self.storage.save_persistent_value("current_preset", preset)
         self.display.draw()
