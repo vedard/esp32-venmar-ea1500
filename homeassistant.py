@@ -30,11 +30,20 @@ class HomeAssistant:
         self.mqtt.publish(self.topic_prefix + "state", json.dumps(state))
 
     def _on_mqtt_connect(self):
-        self.logger.info("Publishing discovery config")
+        self.mqtt.subscribe("homeassistant/status")
         self.mqtt.subscribe(self.topic_prefix + "command/+")
+        self.publish_discovery_config()
+
+    def publish_discovery_config(self):
+        self.logger.info("Publishing discovery config")
         self.mqtt.publish(self.topic_prefix + "config", json.dumps(self._config))
 
     def _message_received(self, topic, message):
+        if topic == "homeassistant/status":
+            if message == "online":
+                self.publish_discovery_config()
+            return
+
         for component in self.components:
             if component.handle_message(self, topic, message):
                 self.logger.info(f"Handled command on {topic}")
