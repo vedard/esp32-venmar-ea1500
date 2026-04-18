@@ -1,10 +1,13 @@
-import logging
 import os
-import requests
 import gc
 import time
 
+import requests
+import logging
+
 class OTA:
+    FILE_SUFFIX = ".ota"
+
     def __init__(self, github_repo, github_branch):
         self.logger = logging.getLogger("OTA")
         self.github_repo = github_repo
@@ -15,7 +18,7 @@ class OTA:
 
     def run(self):
         try:
-            # free up some memory, first HTTP call return a big json
+            # Free some memory before the first HTTP call returns a large JSON payload
             gc.collect()
             time.sleep(3)
             files = self._get_files_list()
@@ -28,7 +31,7 @@ class OTA:
             self.logger.info(f"Updating {len(files)} files")
 
             for path in files:
-                os.rename(path + ".ota", path)
+                os.rename(path + self.FILE_SUFFIX, path)
 
             self.logger.info("success")
 
@@ -50,7 +53,7 @@ class OTA:
         finally:
             response.close()
 
-    def _download(self, path, suffix=".ota"):
+    def _download(self, path):
         url = f"https://raw.githubusercontent.com/{self.github_repo}/{self.github_branch}/{path}"
         self._mkdir_parent(path)
         response = requests.get(url, headers=self.headers)
@@ -59,8 +62,7 @@ class OTA:
             if not response.status_code == 200:
                 raise RuntimeError(f"GET {url} returned {response.status_code}: {response.text}")
 
-            i = 0
-            with open(path + suffix, "wb") as f:
+            with open(path + self.FILE_SUFFIX, "wb") as f:
                 while True:
                     chunk = response.raw.read(2048)
                     if not chunk:

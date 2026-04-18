@@ -9,7 +9,7 @@ def register_routes(app):
         return {
             "version": app.__version__,
             "preset": app.ea1500.state["name"],
-            "ip": app.wifi.get_ip(), 
+            "ip": app.wifi.get_ip(),
             "mqtt": "Connected" if app.mqtt.connected else "Disconnected"
         }
 
@@ -31,5 +31,5 @@ def register_routes(app):
         asyncio.create_task(delay_reboot())
 
         return {
-            "message": "OTA started; device will reboot multiple time",
+            "message": "OTA started; device will reboot multiple times",
         }

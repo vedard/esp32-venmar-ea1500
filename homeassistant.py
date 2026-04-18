@@ -24,7 +24,6 @@ class HomeAssistant:
         self.mqtt.add_connect_callback(self._on_mqtt_connect)
         self.mqtt.add_message_callback(self._message_received)
 
-
     def publish_state(self, state):
         self.logger.info("Publishing state")
         self.mqtt.publish(self.topic_prefix + "state", json.dumps(state))
@@ -48,6 +47,7 @@ class HomeAssistant:
             if component.handle_message(self, topic, message):
                 self.logger.info(f"Handled command on {topic}")
                 return
+
 
 class Component:
     platform = None

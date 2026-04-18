@@ -17,7 +17,7 @@ from ota import OTA
 
 
 class App:
-    __version__ = "1.0.3"
+    __version__ = "1.0.4"
 
     def __init__(self):
         self.logger = logging.getLogger("App")
@@ -107,7 +107,7 @@ class App:
         self.display.draw()
         self.display.wake()
 
-        if self.storage.get_persistent_value("ota_at_boot") == True:
+        if self.storage.get_persistent_value("ota_at_boot"):
             try:
                 self.storage.save_persistent_value("ota_at_boot", False)
                 self.ota.run()
@@ -151,8 +151,8 @@ class App:
         tft.fill(tft.BLACK)
         tft.rect((1, 26), (160, 80), tft.PURPLE)
         tft.rect((2, 27), (158, 78), tft.PURPLE)
-        tft.text((7, 32), f"{self.ea1500.state['name']}", tft.WHITE, font, 2, nowrap=False)
-        tft.text((7, 50), f"{self.ea1500.state['value']}", tft.WHITE, font, 1, nowrap=False)
+        tft.text((7, 32), self.ea1500.state['name'], tft.WHITE, font, 2, nowrap=False)
+        tft.text((7, 50), str(self.ea1500.state['value']), tft.WHITE, font, 1, nowrap=False)
 
         ip = self.wifi.get_ip()
         if ip != "0.0.0.0":

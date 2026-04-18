@@ -43,7 +43,6 @@ class _Logger:
 class _LogWriter:
     def __init__(self, filename, max_bytes):
         self.filename = filename
-        self.rotated_filename = filename + ".1"
         self.max_bytes = max_bytes
 
     def write(self, source, level, message):
@@ -94,7 +93,7 @@ class _LogWriter:
             sys.print_exception(exception, output)
             return output.getvalue().splitlines()
         except Exception:
-            pass
+            return []
 
 
 def _get_writer():

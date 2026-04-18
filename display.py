@@ -24,7 +24,7 @@ class Display:
         self.sleep_timer = Timer(0)
 
     def __brightness_to_duty(self, value: int) -> int:
-        return int(value * 65535 / 100 )
+        return int(value * 65535 / 100)
 
     def set_brightness(self, value):
         if not 1 <= value <= 100:

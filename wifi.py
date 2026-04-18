@@ -36,9 +36,8 @@ class WiFi:
             self.logger.info(f"DNS: {dns}")
             return True
         
-        else:
-            self.logger.error(f"Failed to connect after {retries} attempts")
-            return False
+        self.logger.error(f"Failed to connect after {retries} attempts")
+        return False
     
     def get_ip(self):
         ip, _, _, _ = self.wlan.ifconfig()

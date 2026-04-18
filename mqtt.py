@@ -88,10 +88,11 @@ class MQTT:
 
     def _split_server_port(self, host):
         split = host.split(":")
+        
         if len(split) == 2:
             return split[0], int(split[1])
-        else:
-            return host, 1883
+        
+        return host, self.DEFAULT_PORT
         
     def _message_received(self, topic, msg):
         topic = topic.decode()

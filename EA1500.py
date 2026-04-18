@@ -1,5 +1,6 @@
-from MCP41X1 import MCP41X1 
 import logging
+
+from MCP41X1 import MCP41X1
 
 
 class EA1500:
