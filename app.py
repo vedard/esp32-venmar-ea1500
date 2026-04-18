@@ -17,7 +17,7 @@ from ota import OTA
 
 
 class App:
-    __version__ = "1.0.4"
+    __version__ = "1.0.5"
 
     def __init__(self):
         self.logger = logging.getLogger("App")
@@ -154,11 +154,17 @@ class App:
         tft.text((7, 32), self.ea1500.state['name'], tft.WHITE, font, 2, nowrap=False)
         tft.text((7, 50), str(self.ea1500.state['value']), tft.WHITE, font, 1, nowrap=False)
 
+        if self.storage.get_persistent_value("ota_at_boot"):
+            tft.text((7, 93), f"OTA in progress...", tft.WHITE, font, 1, nowrap=False)
+            return
+
         ip = self.wifi.get_ip()
         if ip != "0.0.0.0":
             tft.text((7, 93), f"IP: {ip}", tft.WHITE, font, 1, nowrap=False)
         else:
             tft.text((7, 93), f"connecting...", tft.WHITE, font, 1, nowrap=False)
+
+        tft.text((7, 85), "MQTT:" + "Connected" if self.mqtt.connected else "Disconnected", tft.WHITE, font, 1, nowrap=False)
 
     def __on_preset_command(self, preset):
         self.logger.info(f"Preset command received: {preset}")
