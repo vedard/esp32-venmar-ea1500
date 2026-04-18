@@ -17,7 +17,7 @@ from ota import OTA
 
 
 class App:
-    __version__ = "1.0.5"
+    __version__ = "1.0.6"
 
     def __init__(self):
         self.logger = logging.getLogger("App")
@@ -115,6 +115,8 @@ class App:
                 reset()
             
         self.mqtt.connect()
+        self.display.draw()
+        self.display.wake()
 
         await asyncio.gather(
             self.mqtt.listen_loop(),
@@ -164,7 +166,7 @@ class App:
         else:
             tft.text((7, 93), f"connecting...", tft.WHITE, font, 1, nowrap=False)
 
-        tft.text((7, 85), "MQTT:" + "Connected" if self.mqtt.connected else "Disconnected", tft.WHITE, font, 1, nowrap=False)
+        tft.text((7, 80), "MQTT: " + ("Connected" if self.mqtt.connected else "Disconnected"), tft.WHITE, font, 1, nowrap=False)
 
     def __on_preset_command(self, preset):
         self.logger.info(f"Preset command received: {preset}")
