@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import io
 
 
 LOG_FILE = "app.log"
@@ -73,12 +74,7 @@ class _LogWriter:
             return
 
         try:
-            os.remove(self.rotated_filename)
-        except OSError:
-            pass
-
-        try:
-            os.rename(self.filename, self.rotated_filename)
+            os.remove(self.filename)
         except OSError:
             pass
 
@@ -90,38 +86,15 @@ class _LogWriter:
         )
 
     def _format_exception(self, exception=None):
-        exc_info = None
-        if exception is None:
-            try:
-                exc_info = sys.exc_info()
-                exception = exc_info[1]
-            except AttributeError:
-                pass
-
         if exception is None:
             return []
 
         try:
-            import io
-
             output = io.StringIO()
             sys.print_exception(exception, output)
             return output.getvalue().splitlines()
         except Exception:
             pass
-
-        try:
-            import traceback
-
-            if exc_info is None:
-                exc_info = sys.exc_info()
-
-            return [
-                line.rstrip("\n")
-                for line in traceback.format_exception(*exc_info)
-            ]
-        except Exception:
-            return [repr(exception)]
 
 
 def _get_writer():

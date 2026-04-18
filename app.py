@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from lib.microdot import Microdot
-from machine import Pin, SPI
+from machine import Pin, SPI, reset
 from MCP41X1 import MCP41X1
 from EA1500 import EA1500
 from storage import Storage
@@ -13,15 +13,19 @@ from button import Button
 from mqtt import MQTT
 from homeassistant import HomeAssistant, Select
 from ntp import NTP
+from ota import OTA
 
 
 class App:
+    __version__ = "1.0.1"
+
     def __init__(self):
         self.logger = logging.getLogger("App")
-        self.logger.info("Starting application")
+        self.logger.info(f"Starting application version {self.__version__}")
 
         self.storage = Storage({
-            "current_preset": "Off"
+            "current_preset": "Off",
+            "ota_at_boot": False
         })
 
         self.wifi = WiFi(
@@ -31,6 +35,11 @@ class App:
 
         self.network_time = NTP(
             self.storage.get_option("ntp.host"),
+        )
+
+        self.ota = OTA(
+            self.storage.get_option("ota.github_repo"),
+            self.storage.get_option("ota.github_branch"),
         )
 
         self.mqtt = MQTT(
@@ -97,7 +106,14 @@ class App:
         self.network_time.sync()
         self.display.draw()
         self.display.wake()
-        
+
+        if self.storage.get_persistent_value("ota_at_boot") == True:
+            try:
+                self.storage.save_persistent_value("ota_at_boot", False)
+                self.ota.run()
+            finally:
+                reset()
+            
         self.mqtt.connect()
 
         await asyncio.gather(
