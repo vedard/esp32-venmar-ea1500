@@ -1,6 +1,8 @@
 import logging
 import os
 import requests
+import gc
+import time
 
 class OTA:
     def __init__(self, github_repo, github_branch):
@@ -13,6 +15,9 @@ class OTA:
 
     def run(self):
         try:
+            # free up some memory, first HTTP call return a big json
+            gc.collect()
+            time.sleep(3)
             files = self._get_files_list()
             self.logger.info(f"Downloading {len(files)} files")
 
