@@ -38,7 +38,6 @@ class Storage:
             self.logger.exception(f"Could not open {filename}", e)
 
     def _save_state(self):
-        self.logger.info(f"Saving {self.STATE_FILE}")
         with open(self.STATE_FILE, "w") as f:
             json.dump(self._state, f)
 
@@ -55,5 +54,6 @@ class Storage:
         if key not in self._state:
             raise ValueError("Not a valid state")
 
+        self.logger.info(f"Saving {key}={value}")
         self._state[key] = value
         self._save_state()
